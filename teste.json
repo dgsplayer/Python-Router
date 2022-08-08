@@ -1,0 +1,29 @@
+{
+  "id": "teste_12",
+  "load_span": 0,
+  "debug_mode": false,
+  "num_vehicles": 18,
+  "time_limit": 3,
+  "depot": 0,
+  "distance_span": 0,
+  "penalty": -1,
+  "max_distance": 9999999,
+  "max_load": 150,
+  "points": [
+    {
+      "reference": "BRI",
+      "lng": -46.852065,
+      "lat": -23.497863
+    },
+    {
+      "reference": "01649747670",
+      "lng": -46.850524,
+      "lat": -23.483483
+    },
+    {
+      "reference": "01646503550",
+      "lng": -46.864889,
+      "lat": -23.484283
+    }
+  ]
+}

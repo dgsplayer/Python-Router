@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mapa de Rotas</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <style>
+        /* Always set the map height explicitly to define the size of the div
+         * element that contains the map. */
+        #map {
+            height: 100%;
+        }
+
+        /* Optional: Makes the sample page fill the window. */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #overflow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 15px;
+            background: #FFFFFF;
+        }
+    </style>
+    <script src="cluster.js"></script>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    var map;
+
+    function renderMap(centerPoint) {
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: centerPoint,
+            zoom: 12
+        });
+        return map;
+    }
+
+    function findByRef(reference, lista) {
+        return lista.find(function(it) {
+            if (it.reference === reference) {
+                return it;
+            }
+        });
+    }
+
+    function points() {
+        let jsonRequest = JSON.parse($('#request_input').val());
+        return jsonRequest.points;
+    }
+
+    function solution() {
+        return JSON.parse($('#response_input').val());
+    }
+
+    function generateColor() {
+        return '#'+Math.floor(Math.random()*16777215).toString(16);
+    }
+
+    function initMap() {
+    }
+
+    function render() {
+        const Http = new XMLHttpRequest();
+        const resourceID = $('#request_input').val();
+        const url='http://192.168.11.75:8080/router/' + resourceID;
+        Http.open("GET", url);
+        Http.send();
+
+        Http.onload = (e) => {
+            if(Http.status === 200) {
+                initMap2(JSON.parse(Http.responseText));
+            }else {
+                alert("Registro não existente: " + resourceID)
+            }
+        }
+    }
+
+    function initMap2(response) {
+        let renderSolution = true;
+        let renderDrops = false;
+
+        let json = response[0];
+        let points = json.request.points;
+        let solutionMatrix = json.result;
+
+        console.log("POINTS", points)
+
+        let drops =
+            [  ]
+        ;
+
+        let map = renderMap(points[0]);
+
+        let markers = [];
+        for (let point of points) {
+            let label = point.reference;
+            if (renderDrops) {
+                for (const drop of drops) {
+                    if (point.id === drop) {
+                        label = "#" + point.reference + "#"
+                    }
+                }
+            }
+            markers.push(new google.maps.Marker({
+                position: point,
+                label: label
+            }));
+        }
+        if (renderSolution) {
+            let dados = "";
+            let routeCount = 0;
+            for (const route of solutionMatrix.routes) {
+                if(route.points.length-2 > 0) {
+                    let color = generateColor();
+                    dados += "<p style='color: " + color + "'>Rota" + routeCount + " - " + (route.points.length - 2) + " itens - " + route.distance + "m </p>";
+                    // Remove depot
+                    route.points.pop();
+                    routeCount++;
+
+                    let solutionsPoints = [];
+
+                    for (const routePoints of route.points) {
+                        solutionsPoints.push(this.findByRef(routePoints.reference, points));
+                    }
+                    let results = new google.maps.Polyline({
+                        path: solutionsPoints,
+                        geodesic: true,
+                        strokeColor: color,
+                        strokeOpacity: 1.0,
+                        strokeWeight: 2
+                    });
+                    results.setMap(map);
+                }
+            }
+            $("#dados").html(dados);
+
+
+        }
+        new MarkerClusterer(map, markers, {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
+
+    }
+
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyASX_oATWm4N1hfoAhuTgD7mhL6VBCpBEU&callback=initMap"
+        async defer></script>
+
+<div id="overflow">
+    <div id="request">
+        <label for="request_input">ID: </label><input type="text" id="request_input" value="" />
+        <button id="render" onclick="render()">Visualizar</button>
+    </div>
+    <div id="dados">
+
+    </div>
+</div>
+</body>
+</html>

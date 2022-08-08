@@ -1,0 +1,6 @@
+Flask==1.0.2
+ortools
+boto3
+python-lambda-local
+webargs==5.4.0
+psycopg2-binary==2.8.3
